@@ -50,7 +50,6 @@ class Buffer(torch.nn.Module):
         self.n_seen_so_far = 0
         self.device = "cuda" if self.params.cuda else "cpu"
 
-        # 定义 buffer
         buffer_size = params.mem_size
         input_size = input_size_match[params.data]
         output_size = self.detect_output_size(input_size)  # 假设你已经实现了这个方法
@@ -59,12 +58,12 @@ class Buffer(torch.nn.Module):
         buffer_label = maybe_cuda(torch.LongTensor(buffer_size).fill_(0))
         buffer_logits = maybe_cuda(torch.FloatTensor(buffer_size, output_size).fill_(0))  # 新添加的logits buffer
 
-        # 注册 buffer，以便可以使用 `torch.save` 保存对象
+
         self.register_buffer('buffer_img', buffer_img)
         self.register_buffer('buffer_label', buffer_label)
         self.register_buffer('buffer_logits', buffer_logits)  # 注册新的 buffer
 
-        # 定义 update 和 retrieve 方法
+
         self.update_method = name_match.update_methods[params.update](params)
         self.retrieve_method = name_match.retrieve_methods[params.retrieve](params)
 
@@ -83,7 +82,7 @@ class Buffer(torch.nn.Module):
             input_sample = input_sample.to(self.device)
         with torch.no_grad():
             if self.params.agent == 'SUPER':
-                output = self.model(input_sample, time=0)
+                output, _, _ = self.model(input_sample, 0)
             else:
                 output = self.model(input_sample)
         return output.shape[1]
@@ -135,7 +134,6 @@ class Second_Buffer(torch.nn.Module):
         self.n_seen_so_far = 0
         self.device = "cuda" if self.params.cuda else "cpu"
 
-        # 定义 buffer
         buffer_size = params.mem_size
         output_size = self.detect_output_size()  
         print('buffer has %d slots' % buffer_size)
@@ -148,7 +146,7 @@ class Second_Buffer(torch.nn.Module):
         self.register_buffer('buffer_label', buffer_label)
         self.register_buffer('buffer_logits', buffer_logits)  
 
-        # 定义 update 和 retrieve 方法
+
         self.update_method = name_match.update_methods[params.update2](params)
         self.retrieve_method = name_match.retrieve_methods[params.retrieve2](params)
 

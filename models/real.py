@@ -19,7 +19,9 @@ class BinaryHashLinear(nn.Module):
         self.key_pick = key_pick
         w = nn.init.xavier_normal_(torch.empty(n_in, n_out))
         rand_01 = np.random.binomial(p=.5, n=1, size=(n_in, period)).astype(np.float32)
-        o = torch.from_numpy(rand_01*2 - 1)
+        # rand_01 = np.ones((n_in, period), dtype=np.float32)
+        # o = torch.from_numpy(rand_01*2 - 1)
+        o = torch.from_numpy(rand_01)
 
         self.w = nn.Parameter(w)
         self.bias = nn.Parameter(torch.zeros(n_out))
@@ -27,12 +29,12 @@ class BinaryHashLinear(nn.Module):
         if not learn_key:
             self.o.requires_grad = False
 
-    def forward(self, x, time, t=None):
+    def forward(self, x, time):
         o = self.o[:, int(time)]
         # print("here")
         # exit(0)
-        if t:
-            o = t[0]*self.o[:, 0]+t[1]*self.o[:, 1]+t[2]*self.o[:,2]
+        # if t:
+        #     o = t[0]*self.o[:, 0]+t[1]*self.o[:, 1]+t[2]*self.o[:,2]
         m = x*o
         r = torch.mm(m, self.w)
         return r
@@ -285,15 +287,17 @@ class HashConv2d(nn.Module):
 
         o_dim = self.in_channels*self.kernel_size[0]*self.kernel_size[1]
         # TODO(briancheung): The line below will cause problems when saving a model
-        o = torch.from_numpy( np.random.binomial( p=.5, n=1, size = (o_dim, period) ).astype(np.float32) * 2 - 1 )
+        o = torch.from_numpy( np.random.binomial( p=.5, n=1, size = (o_dim, period) ).astype(np.float32))
+        # o = torch.from_numpy(np.ones((o_dim, period), dtype=np.float32))
+        # o = torch.from_numpy( np.random.binomial( p=.5, n=1, size = (o_dim, period) ).astype(np.float32) * 2 - 1 )
         self.o = nn.Parameter(o, requires_grad=False)
 
-    def forward(self, x, time, t=None):
-        net_time = time % self.o.shape[1]
-        if t:
-            o= t[0]*self.o[:, 0]+t[1]*self.o[:, 1]+t[2]*self.o[:,2]
-        else:
-            o=self.o[:, net_time]
+    def forward(self, x, time):
+        net_time = int(time)
+        # if t:
+        #     o= t[0]*self.o[:, 0]+t[1]*self.o[:, 1]+t[2]*self.o[:,2]
+        # else:
+        o=self.o[:, net_time]
         o = o.view(1,
                 self.in_channels,
                 self.kernel_size[0],

@@ -1,4 +1,9 @@
+
+
+
+
 # Online Continual learning Code base
+
 Modified based on the: "[PCR: Proxy-based Contrastive Replay for Online Class-Incremental Continual Learning](https://arxiv.org/abs/2304.04408)"
 
 The framework is based on [online-continual-learning](https://github.com/RaptorMai/online-continual-learning).
@@ -10,7 +15,14 @@ The framework is based on [online-continual-learning](https://github.com/RaptorM
 python general_main.py --num_runs 10 --data cifar100 --cl_type nc --agent PCR  --retrieve random --update random --mem_size 10000 --epoch 100 --batch 10 --eps_mem_batch 10 --exp PCR_cifar100_epoch100_random_mem10000 
 ```
 
+```
+python general_main.py --num_runs 10 --data cifar100 --cl_type nc --agent SUPER  --retrieve random --update random --mem_size 10000 --epoch 100 --batch 100 --eps_mem_batch 100 --exp Superpostion_cifar100_epoch100_random_mem10000 
+```
+
+
+
  ### Mini-Imagenet
+
 ```shell
 python general_main.py --num_runs 10 --data mini_imagenet --cl_type nc --agent PCR  --retrieve random --update random --mem_size 10000 --epoch 100 --batch 10 --eps_mem_batch 10 --exp PCR_mini_epoch100_random_mem10000 
 ```

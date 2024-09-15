@@ -32,9 +32,9 @@ class HashBasicBlock(nn.Module):
                 nn.BatchNorm2d(self.expansion*planes, affine=False, track_running_stats=False)]
             )
 
-    def forward(self, x, time, t=None):
-        out = F.relu(self.bn1(self.conv1(x, time, t)))
-        out = self.bn2(self.conv2(out, time, t))
+    def forward(self, x, time):
+        out = F.relu(self.bn1(self.conv1(x, time)))
+        out = self.bn2(self.conv2(out, time))
         if len(self.shortcut) > 0:
             sout = self.shortcut[0](x, time)
             sout = self.shortcut[1](sout)
@@ -124,7 +124,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10, bn1_affine=True, bn1_track_stats=True):
+    def __init__(self, block, num_blocks, num_classes=100, bn1_affine=True, bn1_track_stats=True):
         super(ResNet, self).__init__()
         self.in_planes = 64
 
@@ -200,18 +200,18 @@ class MultiOutResNet(nn.Module):
 
 
 class HashResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10, num_tasks = 20):
+    def __init__(self, block, num_blocks, num_classes=10):
         super(HashResNet, self).__init__()
         self.in_planes = 64
 
         self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64, affine=False, track_running_stats=False)
-        self.layer1 = nn.ModuleList(self._make_layer(block, 64, num_blocks[0], stride=1, period=num_tasks))
-        self.layer2 = nn.ModuleList(self._make_layer(block, 128, num_blocks[1], stride=2, period=num_tasks))
-        self.layer3 = nn.ModuleList(self._make_layer(block, 256, num_blocks[2], stride=2, period=num_tasks))
-        self.layer4 = nn.ModuleList(self._make_layer(block, 512, num_blocks[3], stride=2, period=num_tasks))
+        self.layer1 = nn.ModuleList(self._make_layer(block, 64, num_blocks[0], stride=1, period=1000))
+        self.layer2 = nn.ModuleList(self._make_layer(block, 128, num_blocks[1], stride=2, period=1000))
+        self.layer3 = nn.ModuleList(self._make_layer(block, 256, num_blocks[2], stride=2, period=1000))
+        self.layer4 = nn.ModuleList(self._make_layer(block, 512, num_blocks[3], stride=2, period=1000))
         self.linear = real.BinaryHashLinear(512*block.expansion,
-					  num_classes,
+					  100,
 				          1000)
         self.cheat_period = 1000000
         self.time_slow = 20000
@@ -224,29 +224,29 @@ class HashResNet(nn.Module):
             self.in_planes = planes * block.expansion
         return layers
 
-    def forward(self, x, time, t=None):
+    def forward(self, x, time):
         time = int(time)
         out = F.relu(self.bn1(self.conv1(x)))
-        # out = self.layer1[0](out, time)
-        # out = self.layer1[1](out, time)
-        # out = self.layer2[0](out, time)
-        # out = self.layer2[1](out, time)
-        # out = self.layer3[0](out, time)
-        # out = self.layer3[1](out, time)
-        # out = self.layer4[0](out, time)
-        # out = self.layer4[1](out, time)
-        out = self.layer1[0](out, time, t)
-        out = self.layer1[1](out, time, t)
-        out = self.layer2[0](out, time, t)
-        out = self.layer2[1](out, time, t)
-        out = self.layer3[0](out, time, t)
-        out = self.layer3[1](out, time, t)
-        out = self.layer4[0](out, time, t)
-        out = self.layer4[1](out, time, t)
+        out = self.layer1[0](out, time)
+        out = self.layer1[1](out, time)
+        out = self.layer2[0](out, time)
+        out = self.layer2[1](out, time)
+        out = self.layer3[0](out, time)
+        out = self.layer3[1](out, time)
+        out = self.layer4[0](out, time)
+        out = self.layer4[1](out, time)
+        # out = self.layer1[0](out, time, t)
+        # out = self.layer1[1](out, time, t)
+        # out = self.layer2[0](out, time, t)
+        # out = self.layer2[1](out, time, t)
+        # out = self.layer3[0](out, time, t)
+        # out = self.layer3[1](out, time, t)
+        # out = self.layer4[0](out, time, t)
+        # out = self.layer4[1](out, time, t)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        out = self.linear(out, time, t)
-        return out
+        out = self.linear(out, time)
+        return out, None, []
 
 
 def ResNet18():
@@ -267,8 +267,8 @@ def MultiHeadResNet18():
     return MultiOutResNet(StaticBNBasicBlock, [2,2,2,2],
                           out_hash=False)
 
-def HashResNet18(num_classes, num_tasks):
-    return HashResNet(HashBasicBlock, [2,2,2,2], num_classes=num_classes, num_tasks=num_tasks)
+def HashResNet18(num_classes):
+    return HashResNet(HashBasicBlock, [2,2,2,2], num_classes=num_classes)
 
 
 def ResNet34():

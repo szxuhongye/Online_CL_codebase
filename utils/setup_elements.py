@@ -232,6 +232,7 @@ def setup_architecture(params):
     elif params.data == 'cifar10' and params.agent == 'PCR':
         return Reduced_ResNet18(nclass)
     elif params.data == 'cifar100' and params.agent == 'PCR':
+        # return HashResNet18(nclass)
         return Reduced_ResNet18(nclass)
     elif params.data == 'mini_imagenet'and params.agent == 'PCR':
         model = Reduced_ResNet18(nclass)
@@ -340,9 +341,9 @@ def setup_architecture(params):
         return model
     elif params.agent == 'SUPER':
         if params.data == 'cifar100':
-            return HashResNet18(nclass, params.num_tasks)
+            return HashResNet18(nclass)
         elif params.data == 'mini_imagenet':
-            return HashResNet18(nclass, params.num_tasks)
+            return HashResNet18(nclass)
     elif params.data == 'openloris' and params.agent == 'PCR':
         return Reduced_ResNet18(nclass)
     elif params.agent == 'ER_ACE_L':

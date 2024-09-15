@@ -9,6 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import copy
 from utils.loss import SupConLoss
 import pickle
+import ipdb
 
 
 class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
@@ -174,10 +175,21 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                         # _, preds = torch.matmul(means, feature).max(0)
                         correct_cnt = (np.array(self.old_labels)[
                                            pred_label.tolist()] == batch_y.cpu().numpy()).sum().item() / batch_y.size(0)
+                    # elif self.params.agent=='PCR' or self.params.agent=='SuperPCR':
                     elif self.params.agent=='PCR':
                         logits, _ = self.model.pcrForward(batch_x)
                         _, pred_label = torch.max(logits, 1)
                         correct_cnt = (pred_label == batch_y).sum().item() / batch_y.size(0)
+                        
+                    elif self.params.agent=='SuperPCR':
+                        # logits, _ = self.model.pcrForward(batch_x, task)
+                        # logits, _ = self.model(batch_x, task)
+                        logits = self.model(batch_x, task)
+                        # if self.task == 1 and task == 1:
+                        #     import ipdb; ipdb.set_trace()
+                        _, pred_label = torch.max(logits, 1)
+                        correct_cnt = (pred_label == batch_y).sum().item() / batch_y.size(0)
+                        # print(task)
                     elif self.params.agent=='PCR_m':
                         logits, _ = self.model.forward(batch_x)
                         _, pred_label = torch.max(logits, 1)
@@ -192,20 +204,13 @@ class ContinualLearner(torch.nn.Module, metaclass=abc.ABCMeta):
                         _, pred_label = torch.max(logits, 1)
                         correct_cnt = (pred_label == batch_y).sum().item() / batch_y.size(0)
                     elif self.params.agent=='SUPER':
-                        logits_list = []
-
-                        for time in range(self.params.num_tasks):
-                            logits = self.model.forward(batch_x, time)  # 传递 time 变量
-                            logits_list.append(logits)
-
-                        logits_stack = torch.stack(logits_list, dim=1)
-
-                        max_logits, _ = torch.max(logits_stack, dim=1)
-                        _, pred_label = torch.max(max_logits, 1)
-
+                        logits, _, _ = self.model(batch_x, task)
+                        _, pred_label = torch.max(logits, 1)
                         correct_cnt = (pred_label == batch_y).sum().item() / batch_y.size(0)
+
                     else:
                         logits = self.model.forward(batch_x)
+                        import ipdb; ipdb.set_trace()
                         _, pred_label = torch.max(logits, 1)
                         correct_cnt = (pred_label == batch_y).sum().item()/batch_y.size(0)
 
