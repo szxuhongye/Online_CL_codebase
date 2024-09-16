@@ -211,10 +211,10 @@ class HashResNet(nn.Module):
         self.layer3 = nn.ModuleList(self._make_layer(block, 256, num_blocks[2], stride=2, period=1000))
         self.layer4 = nn.ModuleList(self._make_layer(block, 512, num_blocks[3], stride=2, period=1000))
         self.linear = real.BinaryHashLinear(512*block.expansion,
-					  100,
+					  num_classes,
 				          1000)
-        self.cheat_period = 1000000
-        self.time_slow = 20000
+        # self.cheat_period = 1000000
+        # self.time_slow = 20000
 
     def _make_layer(self, block, planes, num_blocks, stride, period):
         strides = [stride] + [1]*(num_blocks-1)
